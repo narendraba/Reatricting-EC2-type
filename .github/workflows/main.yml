@@ -1,0 +1,51 @@
+name: Terraform CI/CD for EC2 with OIDC
+
+on:
+  push:
+    branches:
+      - dev
+      - prod
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v2
+      with:
+        terraform_version: 1.5.0
+
+    - name: Configure AWS Credentials with OIDC
+      uses: aws-actions/configure-aws-credentials@v3
+      with:
+        role-to-assume: arn:aws:iam::${{ secrets.aws_account_id }}:role/${{ secrets.rolename }}-${{ github.ref_name }}
+        aws-region: ap-south-1a
+
+    - name: Terraform Init
+      run: terraform init -backend-config="bucket=playback-git-terraform" \
+                         -backend-config="key=terraform/${{ github.ref_name }}/state" \
+                         -backend-config="region=ap-south-1a"
+
+    - name: Ensure Workspace Exists
+      id: workspace
+      run: |
+        terraform workspace list | grep -q "${{ github.ref_name }}"
+        if [ $? -ne 0 ]; then
+          terraform workspace new ${{ github.ref_name }}
+        else
+          terraform workspace select ${{ github.ref_name }}
+        fi
+
+    - name: Plan Terraform
+      run: terraform plan -var-file=vars/${{ github.ref_name }}.tfvars
+
+    - name: Apply Terraform
+      run: terraform apply -var-file=vars/${{ github.ref_name }}.tfvars -auto-approve
