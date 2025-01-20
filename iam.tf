@@ -10,22 +10,22 @@ resource "aws_iam_role" "github_actions_role" {
   name = "github-actions-${terraform.workspace}"
 
   assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Principal = {
-          Federated = "arn:aws:iam::${{ secrets.aws_account_id }}:oidc-provider/token.actions.githubusercontent.com"
-        }
-        Action = "sts:AssumeRoleWithWebIdentity"
-        Condition = {
-          StringLike = {
-            "token.actions.githubusercontent.com:sub" = join(",", var.oidc_github_repositories)
-          }
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Federated": "arn:aws:iam::${{ secrets.aws_account_id }}:oidc-provider/token.actions.githubusercontent.com"
+      },
+      "Action": "sts:AssumeRoleWithWebIdentity",
+      "Condition": {
+        "StringLike": {
+          "token.actions.githubusercontent.com:sub": "repo:${{ github.repository }}:*"
         }
       }
-    ]
-  })
+    }
+  ]
+})
 }
 
 # IAM Policy to restrict EC2 instance types
