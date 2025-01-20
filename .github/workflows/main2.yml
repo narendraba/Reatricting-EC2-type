@@ -28,12 +28,12 @@ jobs:
       uses: aws-actions/configure-aws-credentials@v3
       with:
         role-to-assume: arn:aws:iam::${{ secrets.aws_account_id }}:role/${{ secrets.rolename }}-${{ github.ref_name }}
-        aws-region: ap-south-1a
+        aws-region: ap-south-1
 
     - name: Terraform Init
       run: terraform init -backend-config="bucket=playback-git-terraform" \
                          -backend-config="key=terraform/${{ github.ref_name }}/state" \
-                         -backend-config="region=ap-south-1a"
+                         -backend-config="region=ap-south-1"
 
     - name: Ensure Workspace Exists
       id: workspace
