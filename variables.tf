@@ -10,8 +10,3 @@ variable "aws_region" {
   default =  "ap-south-1a"
 }
 
-varaible "oidc_github_repositories" {
-  description = "List of github repos allowed to assume this role"
-  type = list (string)
-  default = ["narendraba/Reatricting-EC2-type"]
-}
